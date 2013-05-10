@@ -1,0 +1,241 @@
+
+\documentclass{article}
+\usepackage{listings}
+\usepackage{mathabx}
+
+\lstset{basicstyle=\small,numbers=left,language=TeX,aboveskip=0.5em,belowskip=0.5em,frame=single,
+	xleftmargin=10pt,framexleftmargin=2em, showstringspaces=false,breaklines=true,
+	escapeinside={(*@}{@*)},
+	 tabsize=2
+	 }
+
+\begin{document}
+\section{ExamGenerator overview}
+\subsection{Introduction and quick start guide}
+
+The ExamGenerator software generates exam or test sheets starting from a larger question file written in \LaTeX. More precisely, if you have a list of 100 questions the software can generate a paper containing randomly selected 10 questions. The process of selection, randomization, placement of the questions can be tuned by options inserted in the LaTeX file.
+
+The philosoply is that you have a large `database' LaTeX file, that you created during some years of activity and you want to randomly and automatically generate an exam sheet out of it.
+\subsection{Generalities}
+In a regular quiz paper, you have some title, some instructions followed by the actual questions. The question series is contained within a \verb+\begin{enumerate}+ environment, each question have a \verb+\item+ tag followed by the question text, then again an \verb+enumerate+ section containing the choices (possible answers to the questions).
+
+The software recognize mainly the \verb+\begin{enumerate}+  and its pair \verb+\end{enumerate}+ and the \verb+\item+ item list. The first level of enumerate environement is associated with the questions, each question is assumed to begin with \verb+\item+ tag and the next enumerate environment is associated with the answer block. Here, each choice is again identified by \verb+\item+. 
+
+Another tag reconized by the software is the \verb+\section+ tag. This tag must be follwed by enumerate environment (this will be assimilated with the questions). In order to mark an answer as being correct, place the \verb+%@T+ tag after the answer body. There is no problem placing the \verb+%@T+ tag after some text. However, the \verb+%+ represents a comment in latex, so if there is text after the tag, this text will be ignored by LaTeX.\\
+
+An example:
+
+\begin{lstlisting}
+...
+\begin{document}
+...
+ \begin{enumerate}
+    \item Question body
+    \begin{enumerate}
+      \item Answer 1 %@T
+      \item Answer 2
+      \item Answer 3
+      \item Answer 4 %@T
+    \end{enumerate}
+ \end{enumerate}
+\end{document}
+\end{lstlisting}
+
+The question body and answers can be multiline. The answer 1 and 4 are marked as correct answers.\\ In the next example we use the \verb+\section+ tag. Note the usage of the enumerate.
+
+\begin{lstlisting}
+...
+\begin{document}
+...
+\item Question bodys
+\section{Midterm questions} 
+  \begin{enumerate}
+      \item Question body 1
+      \begin{enumerate}
+        \item Answer 1 %@T
+        \item Answer 2
+      \end{enumerate}
+   \end{enumerate}
+\section{Final exam}
+  \begin{enumerate}
+      \item Question body 2
+      \begin{enumerate}
+        \item Answer 1
+        \item Answer 2 %@T
+      \end{enumerate}
+   \end{enumerate}
+\end{document}
+\end{lstlisting}
+
+If you want the question numbers of the second section to continue with the first, include \verb+\usepackage{enumitem}+ and specify \verb+[resume]+ when starting the new enumerate in the section: \verb+\begin{enumerate}[resume]+. In order for the software to recognize special text bodies that must be present at the beginning and at the end of the document we have some dedicated tags.
+
+The first line of the LaTeX file should be the \verb+%@Header.begin+ follwed by a space. After that, put comments, document declaration, package inclusions, \verb+begin{document}+ tag, instructions for the students, etc.
+
+Before starting the actual question body (that is, BEFORE the first \verb+\begin{enumerate}+ or \verb+\section+) write the \verb+%@Header.end+ tag.\\
+Very important, the text before the Header.begin tag is ignored (that is, will not be present in the output file). The same, the text between the Header.end tag and the \verb+\begin{enumerate}+ or \verb+\section+ will also be ignored.
+
+For the footer, there is the pair \verb+%@Footer.begin+ and \verb+%@Footer.end+ Again, the Footer.begin should follow right after the end of the last enumerate environement. Footer.end should be placed at the end of the document.\\
+
+It is recommanded that all the \verb+%@+ tags for the software must be placed at the beginning of a new line. White spaces are allowed. The name of the tags is case sensitive! So, Header.begin specify the beginning of the header, but header.begin tag will be ignored.\\ \\
+\subsection{Command line specifications}
+You must have java installed and the software downloaded somewhere.
+
+Use the command:
+
+\verb+java -jar ExamGenerator source_file.tex  dest_file.tex+ $\dlsh$\\
+\verb+                           answers.txt "variant"+
+
+source\_file.tex and dest\_file.tex are the source and destination files. The answers.txt is a file where, if specified, the correct choices for each question will be written. Note that the $\dlsh$ marks the fact that the instruction is on the single line, but here is displayed on two lines due to the lack of space.
+
+The variant is a string which, if present, will replace a special tag present in the header file. See chapter \ref{sect:HowOutputBuilr} for details.
+\subsection{Aswer file format}
+The third parameter, \verb+answers.txt+ outputs a line for each question. First, the question number then the answers that are tagged as correct. The tag will not appear in the output file so this is the only way to recover the correct answers after the selection and shuffling. 
+
+An example of the correct choice file:
+\begin{lstlisting}
+1 2 5 
+2 3 5 
+3 1 2 3 
+4 2 4 5 
+\end{lstlisting}
+This means that the question 1 has correct choices 2 and 5. Question 2 have correct choices 3 and 5 and so on. Please note that the question numbers and the answer numbers are one based and corresponds to the order of questions/answers in the output file.\\
+
+
+That's about the minimum requirements for the software. In the following, more advanced (but very useful) control commands.
+
+
+\section{Control how the questions are generated}
+In the Header.begin -- Header.end  part you can specify a tag that will control some of the software's algorithm parameters.\\
+The tag is:  \verb+%@Specs(variable=value [ variable=value]...)+. Between the variables you can place space or commas. The tag must be contained into a single line.  The variables can be used to specify:\\
+\begin{enumerate}
+	\item \verb+TotalCount=n|auto+ where n is a number. This option specify the total number of questions in the destination file. If the software cannot generate that many questions, an error will be raised. If the setting is auto then the maximum number of questions that can be generated will be generated. Default, \verb+auto+.
+	\item \verb+AnswersPerQestion=n+ where n is a number. Each question in the destination file has a fixed number of answers. This variable controls how many will be. If in the source file, some questions cannot provide enough answers to choose from, an error will be printed out. Default, 5.
+	\item \verb+MaxTrue=n+ and \verb+MinTrue=n+ pairs specify the maximum number of correct choices that could be selected in a question. Conversely the MinTure specify the minimum number of true answers (correct choices) that must be included in a question. Default MaxTrue=4 and MinTrue=1.
+	\item \verb+WriteAnswers=0|1+. If is set to 1, following the text in each answer the letter T will apper if that answer is marked in the source file as being correct. This option is useful when you want to check the quiz for errorneus markups. (i.e. questions marked as correct but being wrong, and vice-versa) Default, 0.
+\end{enumerate}
+
+An example to clarify:\\
+
+Assume the following specifications:\\ 
+
+\verb+%@Specs(TotalCount=41 AnswersPerQestion=5 MaxTrue=4 MinTrue=1)+\\
+
+The output file will have 41 questions, each question 5 answers (A through E, but the numbering style can be changed from LaTeX). At least one choice is correct (because of  MinTrue=1) and at least one choice is wrong (because of MaxTrue=4). The settings are quiz wide and they cannot be changed from section to section.
+
+In the source file, a question can have 4, 5... n answers. However, in the final quiz file you want that each question to have the same number of answers.\\ The software automatically `breaks' these big questions in smaller questions, respecting the specifications. No answer is included in two questions. For example, in source we have a question with 10 answers. The output settings are those in previous example. This big question can be divided in two (5 answers per question) under the provision that are at least 2 correct answers among these 10, and at least 2 choices that are wrong. Otherwise the software cannot construct the two questions.
+
+This facility is useful if you have a question body that can be answered in many ways. You want to generate 4-5 questions, sharing the same text but with different answers. The answers, the number of correct answers, the order of the answers are all randomized, but respecting the restrictions specified. The software will take care of the randomizations, you just have to place all the answers one after another.
+
+The reverse of the medal is that if you have a question with only 5 (or the value of AnswersPerQestion) answers, and the number of correct answers does not fit the MinTrue/MaxTrue,  that question will not be selected in the output file.
+
+\subsection{Control the question grouping}
+The software automatically randomizes the order of the questions in the output file. It is possible to specify a group of questions that will not be shuffled in the entire destination file. 
+
+Tipical scenario is: 
+\\You have some text (a piece of code or a complex problem) and some questions reffering that piece of text. The question bodies are different for each question. Without any precaution, the software will shuffle the questions. You don't want that. 
+
+The following tags keeps the questions grouped:
+
+\verb+%@QuestionBlock.begin() + and \verb+%@QuestionBlock.end + So, surround the question block that you want to be kept fixed with these tags.
+Inside the block and inside each question the randomization and selection will still work.
+
+Example:\\
+\begin{lstlisting}
+...
+\begin{enumerate}
+	\item ....
+	.......
+  %@QuestionBlock.begin() 
+  Some piece of text
+	\item Question 1
+		.....
+	\item Question 2
+	  .....
+	\item Question 3
+    .....
+  %@QuestionBlock.end
+\end{enumerate}
+\end{lstlisting}
+In the output file, at some point, we will have the "`Some piece of text"' followed by the questions 1, 2 and 3 but not in the same order (ex 3,1,2). The placement of the block inside the output file will be random. More than one block can be defined in this way, but the blocks cannot be imbricated.
+
+There are some options that can be specified in the ususal style \verb+(variabile=value)+ inside the brackets:\\
+
+\begin{enumerate}
+	\item \verb+questions=n|auto+ to specify how many questions the generated block will have. Again this is the philosoply of having a larger base of questions from which you want to generate the quiz. The same rules apply as for the TotalCount tag, that is, there must be enough questions in the source. Default value (if this tag is not present) is auto.
+	\item \verb+AlwaysSelect=0|1+ If this option is present, ALL the questions and answers will be "`selected"' in the output, regardless of the \verb+questions+ parameter. The logic of selecting a certain number of answers per question still apply. Moreover, the division of big questions will also be in effect. Default, 0.
+	\item \verb+DoNotRandomize=0|1|All+. If this parameter is present, the position of this question block will be kept fixed with respect to the output file. That is, if this block is the last one in the input file, will be the last one in the output. Unde certain conditions is possible that if it is the k'th in the input, will be the k'th in the output. See the chapter \ref{sect:HowOutputBuilr} for details. \\ The second setting, \verb+All+ will affect the content too. That is, the block will be fixed with respect to the source file and, in addition, the content of the question block will remain unshuffled. That is, the question order AND the answer order in each question inside the block will remain as in the original file. Default, 0.\end{enumerate}
+The DoNotRandomize option works well with AlwaysSelect, when you want to ask the students a non exam question: "`Did you attended the lectures?"' A: No, B: Less than 4, C: Less than 6, D:Almost all of them, E: All of them, twice! This question you want to be placed at the end of the file and the order of answers should remain unchanged. As a result, surround the question with a QuestionBlock tag and place DoNotRandomize and AlwaysSelect tags inside the brackets. 
+\subsection{Sections}
+One can group the questions in sections. For example, the midterm questions are placed into a section and the final exam questions in other section. Some students had taken already the midterm so you want to keep questions separate. The software respects that, and the questions in one section are kept separate from the other sections.
+
+An useful remark here is that the \verb+\section+ part supports the same parameters as a question block. This is achieved by specifying the tag:
+\verb+%@Params(...)+ AFTER the end of \verb+\section{...}+ declaration but BEFORE the beginning of the enumerate environment. Example:
+\begin{lstlisting}
+...
+\section{Midterm}
+Answer these questions only if you didn't pass the midterm. Good luck!\\
+%@Params(DoNotRadomize=1,questions=10)
+\begin{enumerate}[some numbering options]
+	\item ....
+	.......
+  %@QuestionBlock.begin() 
+  Some piece of text
+	\item Question 1
+		.....
+	\item Question 2
+	  .....
+	\item Question 3
+    .....
+  %@QuestionBlock.end
+\end{enumerate}
+\section{Final exam}
+...
+\end{lstlisting}
+You should always include at least DoNotRadomize=1 parameter because usually you want the order of the sections to be kept constant. Setting the parameter value to 1 ensures that the content of the section will be randomized. 
+
+Of course, inside a section you can have normal questions and question blocks. For now, there is no supprot for subsections.
+
+\section{Advanced stuff, or how things work}
+\subsection{Recognized tags and internal structure}
+In this section I will present how the actual work gets done, in order to better understand some unexpected behavior.\\
+The original document is considered as having a tree like structure. The root has a header (marked with Header.begin/end tags) has the content and the footer.\\
+The content can be one enumerate environment OR one or more section environments.
+
+The enumerate environment have several \verb+\item+ that are considered questions. After each item must be present another enumerate. This second level contains items, that are assimilated with answers (choices).
+
+Each answer can have an optional \verb+%@T+ tag that marks the answer as correct.\\
+The question blocks are delimited by the corresponding tags (QuestionBlock.begin/.end) and are specially treated.\\
+Each section have exactly one enumerate environment. The text between the section declaration and the beginning of enumerate will be kept. The same, the text following the enumerate declaration and the first item will be kept (might be some number formatting specifications)
+
+The content of the section follows the same structure: enumerate level 1 $=>$ questions, enumerate level 2 $=>$ answers.\\
+The text between the header and the beginning of the content is ignored. The \verb+\begin{enumerate}+ is hardcoded in the software so this is the only way you can make enumerations. Maybe in the future other environments will be supproted but from my knowledge this is the most used.
+
+\verb+\item+ is another hardcoded LaTeX tag and it marks the beginning of a question body or an answer body, depending on the depth of enumerate environment. The text will be kept until reaching another item (in the case of an answer) or until the start/end of enumerate environment.\\
+The text after the QuestionBlock.begin and first \verb+\item+ will be also kept.
+
+All the text present outside these limits will be ignored by default.\\
+The special commands and options are placed inside LaTeX comments \verb+%+ followed by an @ and then the command name. However, these are also hardcoded so the parser will look for \verb+%@Header.begin+ directly. If the tags are not written exactly, they will be ignored. If they are not where is expected to be, they are ignored or an error will raise. (ex. \verb+%@Header.begin+ in the footer section).
+
+Inside the brackets of the QuestionBlock.begin, Specs and Params the parameters are case sensitive but the values are not. Ex. instead of AlwaysSelect=1 one can write =yes. For DoNotRandomize, the value could be 0, No, no, 1, yes, YES, all, All, ALL. If a parameter is misspelled it will be ignored.\\ 
+Because in special circumstances one might want to write \verb+%@SomeCommand+ the software's parser recognize the \verb+\verb+, \verb+\verbatim+, \verb+\begin{lstlisting}+,  \verb+\lstinline+ and \verb+\begin{verbatim}+ environemnts. Here, all the software's specific tags, enumerations, etc. will be ignored. 
+
+\subsection{How the output file is built} \label{sect:HowOutputBuilr}
+The philosopyh is that you, as a user, have a large "`database"' file with lots of questions and answers and want to generate a fixed number of questions, each question with exactly the same number of choices.
+
+The process of generating the output file is listed below. Each step is applied as a filter on the output of the previous step.
+\begin{enumerate}
+	\item First, the source file is parsed using a generated parser/lexer (JavaCC). The tags are detected and a tree-like structure is generated.
+	\item Each question is checked wrt to number of choices, min and max number of true answers and, if possible, generate more than one question per source question. These parameters (min and max number of true answers) can be used to generate single choice quizzes (max=1, min=1), multiple choice quizzes (min $<$ max), etc.
+	One limitation (for now) is that these settings are fixed for the whole output file. You cannot define single choice questions followed by multiple choice questions. The exact number of correct answers in each question is a random number between min and max.\\
+	If from a source question can be generated more than one destination question, the generated questions will share the same question body.
+	\item Apply the question=n and AlwaysSelect tags. From each section or QuestionBlock that have these tags, the appropiate number of questions will be selected. If the QuestionBlock is included in section, each one with question=n setting, the software will try to satisfy all requests. If this is not possible (the outside block wants less questions than the inside block, or there are not enough questions in the source) an error will be raised.
+	\item Apply the TotalCount tag. Here, the same restrictions as at previous item applies. Error will be raised if not enough questions, or there are already selected more than this tag specifies.
+	\item Randomize the sections, questions, question blocks and choices respecting the DoNotRandomize tag. Despite the fact that the marked question block or section will not be shuffled, is possible that the question(s) that appear before the current block are shuffled with another question block. If this happens, the actual position in the output file will be different. This is because the software shuffles the node childs at each level. A question block is a child of the current container, the same is true for a simple question. Moreover, is possible that some questions before the current block are not selected at previous step which again, will affect the apparent position. The only `safe' place to put the fixed block is at the beginning and the end of the container. Or, use some hacks to ensure that there will be no side effects from selection and randomization (Use auto to question numbers, make sure that no question will generate more than one question in the output, make sure that there is no other shufflable block in the container)
+	\item  Replace a certain string in the header with another string. This is an advanced option, useful if you want to mark each generated quizz. The tag being searched in the header is \verb+@Rep+. It will be replaced with whatever text the user supplies. This is useful of you want to write in the output quiz something like `Quiz variant: A1'. In the source file you will write `Quiz variant: @Rep' and run the software with "A1" for the \verb+variant+ command line parameter.
+	\item Generate the output LaTeX file, based on the remaining tree structure and output the correct answers to a separate text file.
+\end{enumerate}
+
+Feel free to look inside the java code for more details!
+
+
+\end{document}
