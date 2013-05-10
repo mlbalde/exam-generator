@@ -3,7 +3,7 @@
 
 = Introduction =
 
-The ExamGenerator software generates exam or test sheets starting from a
+The Exam Generator software generates exam or test sheets starting from a
 larger question file written in LaTeX. More precisely, if you have a list of 100 questions the software can generate a paper containing randomly selected 10 questions. The process of selection, randomization, placement of the questions can be tuned by options inserted in the LaTeX file.
 
 The philosoply is that you have a large "database" LaTeX file, that you created during some years of activity and you want to randomly and automatically generate an exam sheet out of it.
