@@ -1,0 +1,500 @@
+
+options {
+  LOOKAHEAD = 10;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+}
+
+PARSER_BEGIN(LatexLexer)
+package latexparser.javacc;
+import data.*;
+import java.util.ArrayList;
+public class LatexLexer {
+    private ParsedSource source;
+    /**
+    * Initializes the fields
+    */
+    private void init(){
+        source=new ParsedSource();
+    }
+
+    /**
+    * Main entry point in the lexer/parser. Call the constructor with the stream
+    * and then call getParsedSource to parse the file and get the object.
+    */
+    public ParsedSource getParsedSource()throws ParseException{
+        init();
+        
+        ParserEntry();
+
+        return source;
+    }
+
+}
+
+PARSER_END(LatexLexer)
+
+TOKEN_MGR_DECLS:
+{
+    //Definitions used when lexing the \verb ...  latex structure.
+    int InVerb=0;
+    String InVerbChar="";
+}
+
+TOKEN:
+{
+     <#EOL: "\n" | "\r" | "\r\n" > 
+}
+
+/*
+    Definitions for main annotations that can be found in comments. Note that 
+    between the annotation and comment mark must not be any white space.
+*/
+<DEFAULT>
+TOKEN:
+{
+     <HEAD_BEGIN: "%@Header.begin"> :IN_COMMENT
+|    <HEAD_END: "%@Header.end" > :IN_COMMENT
+|    <FOOT_BEGIN: "%@Footer.begin" > :IN_COMMENT
+|    <FOOT_END: "%@Footer.end" > :IN_COMMENT
+|    <BLOCK_BEGIN: "%@QuestionBlock.begin" > :IN_SP_PARAM   //Expecting some parameters
+|    <BLOCK_END: "%@QuestionBlock.end" > :IN_COMMENT
+|    <SPECS:"%@Specs" > :IN_SP_PARAM                        //Expecting some parameters
+|    <PARAMS:"%@Params" >: IN_SP_PARAM                      //Expect some parameters too
+|    <TRUE_ITEM: "%@T"> :IN_COMMENT                         //Marks an answer as being true.
+|    <SECTION: "\\section">
+}
+
+
+//Treating the comment part. Marks the beginning of a comment
+TOKEN:
+{
+    <COMMENT_S: "%"> : IN_COMMENT
+}
+
+//Collecting the comment content
+<IN_COMMENT> TOKEN:
+{
+    <CHARS_IN_COMMENT: ~["\n", "\r"]>
+}
+
+//Each comment ends at end of line. 
+<IN_COMMENT> TOKEN:
+{
+    <END_COMMENT: (<EOL>) > : DEFAULT
+}
+
+//Treating the Specs or other part requiring parameters.
+//Must parse some (or none) parameters
+<IN_SP_PARAM> TOKEN:
+{
+    //Expect a left brace (
+    <LPAR:"(" > : IN_PARAM_INSIDE //Switch to parameter lexing context
+}
+//In parameters one can find literals, equal sign and right brace 
+<IN_PARAM_INSIDE>TOKEN:{
+    <LITERAL: (["A"-"Z","a"-"z","0"-"9","_","-"])+ > 
+|   <EQUALS :"=" > 
+|   <RPAR:")" >  :IN_COMMENT //Right brace closes this context.
+}
+
+<IN_SP_PARAM,IN_PARAM_INSIDE> SKIP:
+{
+    <[" ","\t",","]> // Spaces, tabs and commas are considered white spaces. They are skipped
+}
+
+<IN_SP_PARAM,IN_PARAM_INSIDE> MORE:
+{
+    //If there any other char than whitespaces and EOL, exit to comment mode.
+    //The next token will be chars in comment
+    <PARAM_ERR: ~[" ","\t",",","\n", "\r"] >:IN_COMMENT
+}
+
+
+//Treating verbatim regions. They are sent to lexer as they are.
+//Inside the verbatims regions one must ignore any comments or directives.
+//They are part of the "verbatim" and are treated in the same way as latex do.
+
+<DEFAULT>
+TOKEN:
+{   
+    <B_LST: "\\begin{lstlisting}"> : IN_VERBAT 
+|   <B_VRB:  "\\begin{verbatim}" > : IN_VERBAT 
+}
+
+<IN_VERBAT> MORE:
+{
+    <CHARS_IN_VERBAT: ~[] >
+}
+<IN_VERBAT> TOKEN:
+{
+    <E_LST: "\\end{lstlisting}"> :DEFAULT
+|   <E_VRB: "\\end{verbatim}">  :DEFAULT 
+}
+
+//Skipping over \verb+ ... + construct, where + can be any character.
+//Because the \verb definition implies that the next character after the \verb keyword is 
+//special, and delimits the verbatim region, we used a hack to manually search for the end token.
+<DEFAULT> TOKEN:{
+    <VERBTOK: ("\\verb" | "\\lstinline" ) (~[]) > 
+         {  
+           InVerb=1;InVerbChar=image.substring(image.length()-1,image.length()); //Take the next character after the token \verb or \lstinline
+         } :IN_VERBTOK 
+}
+
+<IN_VERBTOK> TOKEN: //Collect the "tokens" and append them to the next regular token
+{
+    <CHARS_IN_VERBTOK: ~["\r","\n"]> {  //the \verb ends at EOL. The Latex will raise an error if
+                                        //an EOL is reached before reaching the closing character.
+                                        //So it's a safety net.
+                String ss=image.toString(); //Get the token
+                if(ss.equals(InVerbChar) && InVerb==1)  //Is the character identical 
+                                                        //with the one that begins the sequence?
+                    {
+                       InVerb=0;        //Exit the context.
+                       SwitchTo(DEFAULT);
+                    };   
+                                    } 
+|   <EOL_IN_VERBTOK: <EOL> > {  //Safety net. If an EOL is reached, the lexer can
+                                //safely leave VERBTOK context. Latex will raise an error.
+                InVerb=0;
+                            } : DEFAULT 
+  
+}
+
+
+
+//Treating enumeration contexts from latex.
+
+<DEFAULT> TOKEN:{
+    <ENUM_BEGIN: "\\begin{enumerate}" >
+|   <ENUM_END: "\\end{enumerate}" >
+|   <ITEM: "\\item"  >
+}
+
+
+
+
+//Take all other characters that can be found in the code section of the latex file.
+<DEFAULT> TOKEN:{
+    <CHARS_IN_DEFAULT: ~[] >
+}
+
+
+/* Main entry point of parser
+    I can have a comment, or regular content, or some commands.
+*/
+void ParserEntry():
+{
+    StringBuilder acc=new StringBuilder();
+    String s;
+    Section sect;
+}
+{
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored
+    [<SPECS> ParseSpecs()]
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored
+    <HEAD_BEGIN> ParseHeader(){acc=new StringBuilder();}//Parse the header.
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored    
+    [<SPECS> ParseSpecs()]
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored    
+    ( 
+        (<SECTION> {sect=ParseSection(); source.getSubitems().add(sect);})+ //Section
+        | <ENUM_BEGIN>                                        // Parse the main block
+            {//See if a header was set
+                if(source.getHeader().length()<=0)
+                     source.setHeader(acc.toString());
+                acc=new StringBuilder();
+            }
+            ParseMainBodyWithoutSection()
+    )
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored
+   [<SPECS> ParseSpecs()]
+    [(s=RegularContent(){acc.append(s);})+]             //Regular content taht will be ignored
+    <FOOT_BEGIN> ParseFooter()
+   //The rest of the content will be ignored
+}
+
+void ParseHeader():
+{
+    StringBuilder acc=new StringBuilder();
+    String s;
+    Token t;
+}
+{
+    {acc.append("%");} //The @Header... begins with a comment
+    (
+        s=RegularContent(){acc.append(s);}
+        | 
+        ( t=<ENUM_BEGIN> | t=<ENUM_END> | t=<ITEM> ) 
+        {acc.append(t.image);}
+        |<SPECS> ParseSpecs()
+    )*
+    <HEAD_END>{source.setHeader(acc.toString());}
+}
+
+/*
+Parse main body formed by a big enumeration containing questions and question blocks
+*/
+void ParseMainBodyWithoutSection():
+{
+    StringBuilder acc=new StringBuilder();
+    String s;
+    Token t;
+    Question q=null;
+    QuestionBlock qb=null;
+}
+{
+  ParseBigEnumeration(source)
+}
+/**
+    Parses a \begin{enumerate} ...  \end{enumerate} where between these 
+    can be questions and/or question blocks
+    Returns the characters found between after the end of the {enumerate} and the beginning of the next bloc/item
+*/
+String ParseBigEnumeration(SourceItem container):
+{
+    QuestionBlock qb;
+    Question q;
+    String s;
+    StringBuilder opt=new StringBuilder();
+    boolean collectContent=true;
+}
+{
+(
+    <BLOCK_BEGIN>      //Parse a question block.
+        qb=ParseQuestionBlock()
+        {container.getSubitems().add(qb);
+         collectContent=false;
+        }
+|    <ITEM>              //Parse a question. 
+        q=ParseQuestion()
+        {container.getSubitems().add(q);
+         collectContent=false;
+        }
+|    (s=RegularContent(){
+                if(collectContent)
+                    opt.append(s);
+      })+ //White spaces or other content that we will return to the caller
+|   <SPECS> ParseSpecs()
+
+)+
+<ENUM_END>
+{return opt.toString();}
+}
+
+
+/**
+    Parse an individual section
+*/
+Section ParseSection():
+{
+    StringBuilder content=new StringBuilder("");
+    ArrayList<SourceItem> items=new ArrayList<SourceItem>();
+    String s;
+    Section  section=new Section();
+    Directive dir=new Directive();    
+    }
+{
+    
+    {content.append("\\section");}  //a section begins with \section token
+    (s=RegularContent(){content.append(s);})+ //get what is after the \section token
+    [(<PARAMS> 
+        dir=ParseParameterSet()
+    )]
+    [(s=RegularContent(){content.append(s);})+] //some more content
+    [( <ENUM_BEGIN> 
+        s=ParseBigEnumeration(section){section.setEnumerateOptions(s);}
+    )]
+    
+    [(RegularContent())+] //optional regular content that we will ignore
+   
+    {section.setTextContent(content.toString()); section.getParameters().getMap().putAll(dir.getMap()); return section;}
+
+}
+
+/*
+    Parse the footer
+*/
+void ParseFooter():
+{
+    StringBuilder acc=new StringBuilder();
+    String s;
+    Token t;
+}
+{
+    {acc.append("%");} //The @Footer... begins with a comment
+    (
+        s=RegularContent(){acc.append(s);}
+        | 
+        ( t=<ENUM_BEGIN> | t=<ENUM_END> | t=<ITEM> ) 
+        {acc.append(t.image);}
+    )*
+    <FOOT_END>{source.setFooter(acc.toString());}
+}
+
+
+/*
+Parse a question block
+*/
+
+QuestionBlock ParseQuestionBlock():
+{
+    StringBuilder content=new StringBuilder("");
+    ArrayList<Question> questions=new ArrayList<Question>();
+    String s;
+    Question q;
+    Directive dir;
+}
+{
+    //Parse the parameters
+    dir=ParseParameterSet()
+    
+    {content.append("%");}  //a @QuestionBlock.begin begins with a comment
+    (s=RegularContent(){content.append(s);})+
+
+(    <ITEM>
+        q=ParseQuestion(){questions.add(q);}
+     |RegularContent()
+)+
+    <BLOCK_END>
+    (s=RegularContent(){content.append(s);})+
+    {
+        return new QuestionBlock(content.toString(),questions,dir);
+    }
+}
+
+/*
+Parse a parameter set.
+*/
+Directive ParseParameterSet():
+{
+    Directive d=new Directive();
+    Token t1,t2;
+}
+{
+    <LPAR>
+    (t1=<LITERAL> <EQUALS> t2=<LITERAL>
+        {d.getMap().put(t1.image,t2.image);}
+      )*
+    <RPAR>
+    {return d;}
+}
+
+/*
+Parse a parameter specification
+*/
+
+void ParseSpecs():
+{
+    Directive d;
+}
+{
+    d=ParseParameterSet()
+    {source.getParameters().getMap().putAll(d.getMap());
+    }
+    
+}
+
+
+/*Parse a question
+*/
+
+Question ParseQuestion():
+{
+    StringBuilder content=new StringBuilder("");
+    ArrayList<Answer> answers=new ArrayList<Answer>();
+    String s;
+    Answer ans;
+}
+{
+    (s=RegularContent(){content.append(s);})+
+    <ENUM_BEGIN>
+        (
+            <ITEM>
+            ans=ParseAnswer()
+            {answers.add(ans);}
+        |   RegularContent()
+        )+
+    <ENUM_END>
+
+    {
+        return new Question(content.toString(),answers,null);
+    }
+}
+
+
+/*Parse an answer
+*/
+
+Answer ParseAnswer():
+{  
+    StringBuilder content=new StringBuilder("");
+    String s;
+    boolean tval=false;
+    Token t;
+}
+{
+    (s=RegularContent(){content.append(s);})+
+    [<TRUE_ITEM> {tval=true;content.append("%");} 
+    (t=<CHARS_IN_COMMENT>{content.append(t.image);})*
+     t=<END_COMMENT>{content.append(t.image);}
+     (s=RegularContent(){content.append(s);})*
+    ]
+    {
+        return new Answer(content.toString(),tval,null);
+    }   
+}
+
+/* Get regular content, constructed from code characters, comments, verbatims,
+\verb consructs, etc.
+*/
+String RegularContent():
+{
+    StringBuilder content=new StringBuilder("");
+    Token t;
+}
+{
+(
+    //Zero or more regular characters,
+    (
+        t=<CHARS_IN_DEFAULT>{content.append(t.image);}
+    ) 
+|   
+    //A \verb token or chars in that context or an EOL,
+    (
+       t=<VERBTOK>  {content.append(t.image);}
+      (t=<CHARS_IN_VERBTOK>{content.append(t.image);})*
+    |  (t=<EOL_IN_VERBTOK>{content.append(t.image);}) | <EOF>
+    )
+|   //Comments that are outputted as they are,
+    (t=<COMMENT_S>{content.append(t.image);}
+     (t=<CHARS_IN_COMMENT>{content.append(t.image);} )*
+       t=<END_COMMENT>{content.append(t.image);}
+    )
+|   (
+     (t=<CHARS_IN_COMMENT>{content.append(t.image);} )*
+     t=<END_COMMENT>{content.append(t.image);} 
+    )
+|   //Listing and verbatim context
+   ( 
+     (t=<B_LST>|t=<B_VRB>|t=<E_LST>|t=<E_VRB>)
+     {content.append(t.image);}
+   )
+)  
+    {return content.toString();}
+}

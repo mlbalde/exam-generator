@@ -1,0 +1,302 @@
+%@Header.begin
+\documentclass[a4paper,10pt]{article}%
+
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{alltt}
+\usepackage{fullpage}
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{forloop}
+\usepackage{supertabular}
+\usepackage{epstopdf}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{balance}
+
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{patterns}
+
+\usepackage[left=1.5cm,top=1.5cm,right=1.5cm,bottom=2cm,footskip=14pt, nohead]{geometry}
+
+\renewcommand{\figurename}{Figura }
+
+\lstset{basicstyle=\small,numbers=left,language=Java,aboveskip=0.5em,belowskip=0.5em,frame=single,
+	xleftmargin=10pt,framexleftmargin=2em, showstringspaces=false,breaklines=true,
+	escapeinside={(*@}{@*)},
+	 tabsize=2
+	 }
+
+\begin{document}
+
+\begin{center}
+\Large 
+Demo question sheet presenting main facilities
+\end{center}
+
+\normalsize
+This text will be replaced: @Rep. The searched token @\hspace{0 pt}Rep. Please note that this token will be replaced even if it is in verbatim environment (\verb+\verb!...!+).  This is because the replacement is done from java code, executing a simple header wide text replace. \\ 
+
+This is a "source" document containing several sections, questions and question block that demonstrate several capabilities of the quiz generator.
+
+This section is beween \verb+%@Header.begin+ and \verb+%@Header.end+ tags. \\
+
+An example of answer grid. A student might check the correct choices here.
+
+\vspace{0.2 cm}
+\begin{center}
+\Large
+\begin{multicols}{2}
+	\begin{supertabular}{|c|c|c|c|c|c|}
+		\hline	&A&B&C&D&E \\ \hline
+	 	\newcounter{qid}
+	 	\forloop{qid}{1}{\value{qid} < 10 }{\arabic{qid} &  &  &  & & \\  \hline}
+	 	\arabic{qid} &  &  &  & &\\ \hline
+	\end{supertabular}
+
+	\columnbreak
+	
+	\begin{supertabular}{|c|c|c|c|c|c|}
+		\hline	&A&B&C&D&E \\ \hline
+	 	\forloop{qid}{11}{\value{qid} < 20 }{\arabic{qid} &  &  &  & & \\  \hline}
+	 	\arabic{qid} &  &  &  & &\\ \hline
+	\end{supertabular}
+	
+\end{multicols}
+\end{center}
+
+\normalsize
+
+\vspace{1cm}
+One can write here whatever instructions are needed. 
+
+This document can be used as a skeleton to create your own "question database".
+
+\large
+Another reference that can be replaced: @Rep. This part is still in the @Header.
+\normalsize
+
+In the header is a good place to write some driving parameters. Number of questions in the generated output, number of choices per question, maximum correct choices, etc.
+
+Here, the following @Specs tag is placed:\\ \verb+%@Specs(TotalCount=auto AnswersPerQestion=5 MaxTrue=5 MinTrue=1 WriteAnswers=0)+. Note that in the source code we have two @Specs, one that is for ExamGenerator to interpret and one is for printing. The latter is written in a verbatim envoironment so the software will skip it. \\
+
+%@Specs(TotalCount=auto AnswersPerQestion=5 MaxTrue=5 MinTrue=0 WriteAnswers=0)
+
+Please note that usually the number of questions in a quiz is fixed.
+
+ \setlength{\itemsep}{1pt}
+ \setlength{\parskip}{0pt}
+ \setlength{\parsep}{0pt}
+
+%Here, we specify the end of header
+%@Header.end
+
+All this text will be ignored when parsing the source. As a result it will not appear in the output file. Please note where in the source code this text is placed!
+
+
+\section{First section}
+It is tagged with "DoNotRandomize=1" so it will be always the first section in the output. \\The tag is: \verb+%@Params (DoNotRandomize=1, questions=6)+ and is placed before the enumerate environment.
+
+Another annotation is the number of questions that will be generated. This section can generate 1+3+4=8 questions but we want only 6.
+%@Params(DoNotRandomize=1  questions=6)
+\begin{enumerate}
+	\item This is question 1 with 5 answers.
+	\begin{enumerate}
+		\item Choice 1, marked as true. %@T
+		\item Choice 2, marked as true. %@T
+		\item Choice 3, 
+		\item Choice 4,
+		\item Choice 5,
+	\end{enumerate}
+	\item This is question 2 with 15 answers. In the output this question will be broken and shuffled with other questions in this section
+	\begin{enumerate}
+		\item Choice 1,
+		\item Choice 2,
+		\item Choice 3, marked as true. %@T
+		\item Choice 4, marked as true. %@T
+		\item Choice 5, marked as true. %@T
+		\item Choice 6,
+		\item Choice 7,
+		\item Choice 8,
+		\item Choice 9,
+		\item Choice 10,
+		\item Choice 11,
+		\item Choice 12,
+		\item Choice 13
+		\item Choice 14
+		\item Choice 15
+	\end{enumerate}
+	\item This is question 3 with 20 answers. In the output this question will be broken and shuffled with other questions in this section
+	\begin{enumerate}
+		\item Choice 1,
+		\item Choice 2,
+		\item Choice 3, marked as true. %@T
+		\item Choice 4, marked as true. %@T
+		\item Choice 5, marked as true. %@T
+		\item Choice 6,
+		\item Choice 7,
+		\item Choice 8,
+		\item Choice 9,
+		\item Choice 10,
+		\item Choice 11,
+		\item Choice 12,
+		\item Choice 13
+		\item Choice 14
+		\item Choice 15
+		\item Choice 16,
+		\item Choice 17,
+		\item Choice 18,
+		\item Choice 19,		
+		\item Choice 20, %@T		
+	\end{enumerate}
+	
+\end{enumerate}
+
+
+\section{Second section}
+This section has no DoNotRanomize so its position will be shuffled.
+
+Please note the usage of [resume].
+\begin{enumerate}[resume]
+	\item This is question 1 section 2, with 5 answers.
+	\begin{enumerate}
+		\item Choice 1, marked as true. %@T
+		\item Choice 2, marked as true. %@T
+		\item Choice 3, 
+		\item Choice 4,
+		\item Choice 5,
+	\end{enumerate}
+\end{enumerate}
+
+
+
+\section{Third section}
+This section has no DoNotRanomize so its position will be shuffled.
+\begin{enumerate}[resume]
+	\item This is question 1 section 3, with 5 answers.
+	\begin{enumerate}
+		\item Choice 1, marked as true. %@T
+		\item Choice 2, marked as true. %@T
+		\item Choice 3, 
+		\item Choice 4,
+		\item Choice 5,
+	\end{enumerate}
+\end{enumerate}
+
+
+
+\section{Fourth section}
+This section has no DoNotRanomize so its position will be shuffled.
+\begin{enumerate}[resume]
+	\item This is question 1 section 2, with 5 answers.
+	\begin{enumerate}
+		\item Choice 1, marked as true. %@T
+		\item Choice 2, marked as true. %@T
+		\item Choice 3, 
+		\item Choice 4,
+		\item Choice 5,
+	\end{enumerate}
+\end{enumerate}
+
+
+
+\section{Fifth section}
+This section has no DoNotRanomize so its position will be shuffled.
+
+We also exemplify a question block. Please note that the questions in the questionblock will not be shuffled.
+\begin{enumerate}[resume]
+	
+	\item This is question 1 section 2, with 5 answers.
+	\begin{enumerate}
+		\item Choice 1, marked as true. %@T
+		\item Choice 2, marked as true. %@T
+		\item Choice 3, 
+		\item Choice 4,
+		\item Choice 5,
+	\end{enumerate}
+		Text that will be ignored, between questions\\
+		
+	\item This is question 2 with 20 answers. In the output this question will be broken and shuffled with other questions in this section\\
+	Placed here just to have enough material to shuffle with.
+	\begin{enumerate}	
+		\item Choice 1,
+		\item Choice 2,
+		\item Choice 3, marked as true. %@T
+		\item Choice 4, marked as true. %@T
+		\item Choice 5, marked as true. %@T
+		\item Choice 6,
+		\item Choice 7,
+		\item Choice 8,
+		\item Choice 9,
+		\item Choice 10,
+		\item Choice 11,
+		\item Choice 12,
+		\item Choice 13
+		\item Choice 14
+		\item Choice 15
+		\item Choice 16,
+		\item Choice 17,
+		\item Choice 18,
+		\item Choice 19,		
+		\item Choice 20, %@T		
+	\end{enumerate}
+	
+	Text that will be ignored, before question block\\
+
+	
+	%@QuestionBlock.begin()
+		This is a question block. Text placed here will be produced in the output. Mainly we have a problem and several questions related to it.
+		
+		\item Large question inside the block, nr 1.
+		\begin{enumerate}
+			\item Choice 1,
+			\item Choice 2,
+			\item Choice 3, marked as true. %@T
+			\item Choice 4, marked as true. %@T
+			\item Choice 5, marked as true. %@T
+			\item Choice 6,
+			\item Choice 7,
+			\item Choice 8,
+			\item Choice 9,
+			\item Choice 10,
+		\end{enumerate}
+		\item Question inside the block, nr 2.
+		\begin{enumerate}
+			\item Choice 1,
+			\item Choice 2,
+			\item Choice 3, marked as true. %@T
+			\item Choice 4, marked as true. %@T
+			\item Choice 5, marked as true. %@T
+		\end{enumerate}
+	End of the question block. This text will also be ignored.
+	%@QuestionBlock.end
+	
+\end{enumerate}
+
+
+
+\section{Last section}
+This section has no DoNotRanomize so its position will be shuffled.
+It is tagged with "DoNotRandomize=All,AlwaysSelect=1" so it will be always the last section in the output, and it will be always selected!
+%@Params(DoNotRandomize=All,AlwaysSelect=1)
+\begin{enumerate}[resume]
+	\item Did you liked the exam? \\You don't want the order of the answers to be shuffled, so the section has DoNotRandomize=all parameter. If in this section were more questions, one might enclose only this question into a questionblock tagged appropriately.
+	\begin{enumerate}
+		\item Hated it! %@T
+		\item Not quite
+		\item Tolerable
+		\item Liked it a bit.
+		\item Yes!
+	\end{enumerate}
+\end{enumerate}
+
+This text will be also ignored. Look into the source file to see that is placed between the end of enumerate and beginning of the footer.
+
+%@Footer.begin
+Begin of the footer.
+\end{document}
+%@Footer.end

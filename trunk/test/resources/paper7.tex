@@ -1,0 +1,56 @@
+%@Header.begin
+
+\documentclass{article}
+\usepackage{enumitem}
+\begin{document}
+%@Header.end
+\section{Section 1}
+Some description\\
+Some parameters: %@Params(questions=1, DoNotRadomize=1)
+\\ 
+AAA_SEARCH_BBB\\
+\begin{enumerate}
+%@QuestionBlock.begin(questions=auto)
+\item Say which affirmations are correct
+\begin{enumerate}
+	\item \verb+v1+ Answer 1
+	\item \verb+v1+ Answer 2
+	\item \verb+v1+ Answer 3
+\end{enumerate}
+
+\item Say which affirmations are correct
+\begin{enumerate}	
+	\item \verb+v1+ Answer 5
+	\item \verb+v1+ Answer 6
+	\item \verb+v1+ Answer 7
+\end{enumerate}
+%@QuestionBlock.end
+\end{enumerate}
+\section{Section 2}
+Some other description	
+\begin{enumerate}[resume]
+
+\item Question 3
+\begin{enumerate}
+	\item \verb+v1+ Answer 8
+	\item \verb+v1+ Answer 9
+	\item \verb+v1+ Answer 10
+\end{enumerate}
+
+\end{enumerate}
+\section{Final thoughts}
+Any final thoughts?
+%@Params(questions=auto, DoNotRadomize=all)
+\begin{enumerate}[resume]
+\item Question 4 in a different section
+\begin{enumerate}
+	\item \verb+v1+ Answer 11
+	\item \verb+v1+ Answer 12
+	\item \verb+v1+ Answer 13
+\end{enumerate}
+
+\end{enumerate}
+
+%@Footer.begin
+\end{document}
+%@Footer.end
