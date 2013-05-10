@@ -39,6 +39,11 @@ Please examine the two pdf's, source pdf and dest pdf to see how a typical sheet
 
 The link to demo files is: [https://code.google.com/p/exam-generator/source/browse/#svn%2Ftrunk%2Fdemo trunk/demo]
 
+The command line used to generate the dest_1.tex file is:
+{{{
+java -jar ExamGenerator source_1.tex dest_1.tex answers.txt "Replaced!"
+}}}
+
 = Final remarks =
 
 Feel free to take a look in the java code for more details. Comments are welcome!
