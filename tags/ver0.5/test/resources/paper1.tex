@@ -1,0 +1,128 @@
+%regular comment %%%
+%%%%%%%%%%%%%%%%%%%%  This text will be ignored.
+%
+%@Header.begin  The begining of the header.
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\begin{document}
+Some sample document
+
+\verb!%@Header.begin! And some text after
+\verb%  A real token! % %It's workinsg!
+\lstinline!%@Header.begin! And some text after. The lstinline is the verb for listings package
+\lstinline%  A real token! % %It's workinsg!
+
+\begin{lstlisting}
+package exam;
+public class VarDeclare {
+    public  static final Integer v1 = 20;
+            static       String  s1 = "Ala Bala";%Comment
+                         String  s2; 				%@Begin.Header
+    private static       Integer v2 = 20;
+    private              Integer v3 = 15;
+    private        final Integer v4 = 23;
+    public void Meth1(){
+        v1=30;
+        v2=20;
+        v3=1;
+    }
+    private static Meth2(){
+        v3=30;
+        v4=30;
+    }
+}
+\end{lstlisting}
+
+\begin{verbatim}
+#include <iostream>         // < > is used for standard libraries.
+void main(void)             // ''main'' method always called first.
+{
+ cout << ''This is a message.'';
+                            // Send to output stream.
+}
+\end{verbatim}
+Please pay attention to the following:
+\begin{enumerate}
+	\item Ennumerate instances in the header should be parsed in verbatim
+	\item Ennumerate instances in the header should be parsed in verbatim
+	\item Ennumerate instances in the header should be parsed in verbatim
+\end{enumerate}
+
+%@Header.end
+
+%@Specs(Attrib1=val1 Attrib2=val2 Attrib3=23) Some specifications. The comments after will be ignored.
+
+\begin{enumerate}
+\item Question 1
+\begin{enumerate}
+\item Answer 1
+    \item Answer 2 %@T Because is true
+    \item Answer 3 %Some other comments
+\end{enumerate}
+\item Question 2 %comment % asf
+\begin{verbatim} 
+asdfasdfasdfa
+asdfasdfasd
+% Some comment that is not actually comment
+asd
+\end{verbatim}
+
+\begin{enumerate}
+    \item Answer 1
+    \item Answer 2
+    \item Answer 3
+    \item Answer 4
+\end{enumerate}
+
+%@QuestionBlock.begin()
+	Quest Block. This text will be kept
+	\item block Question 1
+	\begin{enumerate}
+		\item Answer 1
+		\item Answer 2
+		\item Answer 3
+		\item Answer 4
+	\end{enumerate}
+	\item block Question 2
+	\begin{enumerate}
+		\item Answer 1
+		\item Answer 2
+		\item Answer 3
+		\item Answer 4
+	\end{enumerate}
+%@QuestionBlock.end
+
+%@QuestionBlock.begin(questions=10)
+	Quest Block. This text will be kept
+	\item block Question 3
+	\begin{enumerate}
+		\item Answer 1
+		\item Answer 2
+		\item Answer 3
+		\item Answer 4
+	\end{enumerate}
+	\item block Question 4
+	\begin{enumerate}
+		\item Answer 1
+		\item Answer 2
+		\item Answer 3
+		\item Answer 4
+	\end{enumerate}
+%@QuestionBlock.end
+
+
+\end{enumerate}
+%@Footer.begin
+The same with the footer:
+\begin{enumerate}
+	\item Ennumerate instances in the header should be parsed in verbatim
+	\item Ennumerate instances in the header should be parsed in verbatim
+	\item Ennumerate instances in the header should be parsed in verbatim
+\end{enumerate}
+\end{document}
+%@Footer.end
+
+%Some text that will be ignored

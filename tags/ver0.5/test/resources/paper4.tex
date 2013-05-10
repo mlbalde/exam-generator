@@ -1,0 +1,88 @@
+%@Header.begin
+%% Based on a TeXnicCenter-Template by Gyorgy SZEIDL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------
+%
+\documentclass[a4paper,10pt]{article}%
+%Options -- Point size:  10pt (default), 11pt, 12pt
+%        -- Paper size:  letterpaper (default), a4paper, a5paper, b5paper
+%                        legalpaper, executivepaper
+%        -- Orientation  (portrait is the default)
+%                        landscape
+%        -- Print size:  oneside (default), twoside
+%        -- Quality      final(default), draft
+%        -- Title page   notitlepage, titlepage(default)
+%        -- Columns      onecolumn(default), twocolumn
+%        -- Equation numbering (equation numbers on the right is the default)
+%                        leqno
+%        -- Displayed equations (centered is the default)
+%                        fleqn (equations start at the same distance from the right side)
+%        -- Open bibliography style (closed is the default)
+%                        openbib
+% For instance the command
+%           \documentclass[a4paper,12pt,leqno]{article}
+% ensures that the paper size is a4, the fonts are typeset at the size 12p
+% and the equation numbers are on the left side
+%
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{alltt}
+\usepackage{fullpage}
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{forloop}
+\usepackage{supertabular}
+\usepackage{epstopdf}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{balance}
+
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{patterns}
+
+\usepackage[left=1.5cm,top=1.5cm,right=1.5cm,bottom=2cm,footskip=14pt, nohead]{geometry}
+
+\renewcommand{\figurename}{Figura }
+
+\lstset{basicstyle=\small,numbers=left,language=Java,aboveskip=0.5em,belowskip=0.5em,frame=single,
+	xleftmargin=10pt,framexleftmargin=2em, showstringspaces=false,breaklines=true,
+	escapeinside={(*@}{@*)},
+	 tabsize=2
+	 }
+
+\begin{document}
+
+%\begin{multicols}{2}
+\twocolumn
+\hyphenpenalty=8500
+
+ \setlength{\itemsep}{1pt}
+ \setlength{\parskip}{0pt}
+ \setlength{\parsep}{0pt}
+\balance
+%@Header.end
+%@Specs(TotalCount=auto AnswersPerQestion=5 MaxTrue=4 MinTrue=1 WriteAnswers=0)
+\begin{enumerate}
+
+\item Question: \lstinline!MyClass!. About \lstinline!a==b! can tell:
+\begin{enumerate}
+	\item Item 1 \lstinline!true! 
+	\item Item 2 \lstinline!MyClass! eval \lstinline!a.membru==b.membru!. if 	\lstinline!a.membru==b.membru! a \lstinline!a==b! e \lstinline!true!.
+	\item Item 3 \lstinline!if! sau \lstinline!while! p \lstinline!int!.  
+	\item Item 4 \lstinline!MyClass()!
+	\item Item 5 \lstinline!true!. %@T
+\end{enumerate}
+
+\end{enumerate}
+
+
+%@Footer.begin
+
+%\end{multicols}
+\end{document}
+%@Footer.end
